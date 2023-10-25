@@ -37,11 +37,20 @@
               </template>
             </v-dialog>
           </v-col>
+          <v-col cols="12">
+            <v-text-field
+              v-model="search" 
+              @change="getImages"
+              clearable 
+              label="Search" 
+              variant="outlined" />
+          </v-col>
           <v-col v-for="image in images" :key="image.id" cols="12">
-            <v-img 
-              :alt="image.text"
-              :src="image.src"
-              @click="selectImage(image.id)"/>
+            <v-card @click="selectImage(image.id)">
+              <v-img 
+                :alt="image.text"
+                :src="image.src" />
+            </v-card>
           </v-col>
         </v-row>
       </v-container>
@@ -79,7 +88,7 @@
   export default defineComponent({
     name: "app",
     data: () => ({ 
-      seach: "",
+      search: "",
       newImage: null,
       newImageText: '',
       dialog: false,
@@ -90,7 +99,7 @@
     }),
     methods: {
       getImages() {
-        axios.get(`http://localhost:5010/all`).then((response) => {
+        axios.get(`http://localhost:5010/all`, {params: {query: this.search}}).then((response) => {
           this.images = response.data;
         });
       },
