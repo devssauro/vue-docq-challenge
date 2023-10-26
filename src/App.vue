@@ -4,15 +4,15 @@
       <v-container>
         <v-row>
           <v-col cols="12">
-            <v-dialog width="500" v-model="dialog">
+            <v-dialog width="500" v-model="dialog" id="upload-image-card">
               <template v-slot:activator="{ props }">
-                <v-btn block v-bind="props" variant="tonal">
+                <v-btn block v-bind="props" variant="tonal" id="add-image-btn">
                   add image
                 </v-btn>
               </template>
 
               <template v-slot:default="{ isActive }">
-                <v-card title="Dialog">
+                <v-card title="Submit new image">
                   <v-card-text>
                     <v-file-input
                       v-model="newImage"
