@@ -57,7 +57,6 @@
         class="pt-5 pr-2"
         v-model="search" 
         @change="getImages"
-        clearable 
         density="compact"
         single-line
         label="Search" 
@@ -66,12 +65,19 @@
 
     <v-main fill-heigth>
       <v-container>
-        <v-row>
+        <v-row v-if="this.selectedImg !== null">
           <v-col cols="6">
             <v-card-text>
               <v-img :max-height="300" v-if="this.selectedImg !== null" :src="getSelectedImageSrc()" />
               {{ getSelectedImageText() }}
             </v-card-text>
+          </v-col>
+          <v-col cols="6">
+            <v-card :title="`Total of words: ${totalWords}`" class="mb-2">
+            </v-card>
+            <v-card title="Most frequent words" class="px-4 pb-4">
+              <BarChart :chartData="wordFreqData" />
+            </v-card>
           </v-col>
         </v-row>
       </v-container>
@@ -80,31 +86,54 @@
 </template>
 
 <script>
-  import { ref, defineComponent } from 'vue'
+  import { ref, defineComponent } from 'vue';
   import { createWorker } from 'tesseract.js';
-  import axios from 'axios'
-  import FormData from "form-data"
+  import axios from 'axios';
+  import FormData from "form-data";
+  import { BarChart } from 'vue-chart-3';
+  import { Chart, registerables } from 'chart.js';
+  Chart.register(...registerables);
 
   const drawer = ref(null)
 
   export default defineComponent({
     name: "app",
+    components: {BarChart},
     data: () => ({ 
-      search: "",
-      newImage: null,
-      newImageText: '',
       dialog: false,
       drawer: null,
       images: [],
-      selectedImg: null,
       loadingUpload: false,
+      newImage: null,
+      newImageText: '',
+      search: "",
+      selectedImg: null,
       selectedWordCount: 0,
       selectedWordFrequency: {},
+      totalWords: null,
+      wordFreqData: {
+        labels: [],
+        datasets: [
+          {
+            data: [],
+          },
+        ],
+      }
     }),
     methods: {
       getImages() {
         axios.get(`http://localhost:5010/all`, {params: {query: this.search}}).then((response) => {
           this.images = response.data;
+        });
+      },
+      getMostFrequentWords() {
+        axios.get(`http://localhost:5010/${this.selectedImg}/words/occurencies`, {params: {query: this.search}}).then((response) => {
+          this.wordFreqData = response.data;
+        });
+      },
+      getTotalWords() {
+        axios.get(`http://localhost:5010/${this.selectedImg}/words/total`, {params: {query: this.search}}).then((response) => {
+          this.totalWords = response.data.total_words;
         });
       },
       uploadImage() {
@@ -113,7 +142,7 @@
           let fd = new FormData();
           fd.set("img", this.newImage[0]);
           console.log("starting")
-          const worker = await createWorker('eng+pt_pt');
+          const worker = await createWorker('eng');
           const { data: { text } } = await worker.recognize(this.newImage[0]);
           fd.set("text_data", text.replace(/\n/g, " "));
           await worker.terminate();
@@ -122,12 +151,15 @@
             headers: {"Content-Type": "multipart/form-data"}
           }).then((res) => {
             this.getImages()
+            this.selectImage(res.data.id);
           });
           this.dialog = false;
         })();
       },
       selectImage(imageId) {
         this.selectedImg = imageId;
+        this.getMostFrequentWords();
+        this.getTotalWords();
       },
       getSelectedImageSrc() {
         if (this.selectedImg !== null)
