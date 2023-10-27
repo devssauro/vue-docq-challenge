@@ -15,4 +15,17 @@ yarn dev
 
 ## Docker configuration
 
-### **TBD**
+```
+Run all the project on docker
+docker compose up --build
+
+Run only the backend to use the frontend on yarn
+docker compose up backend && yarn dev
+```
+
+## Selenium tests
+
+```
+Run an specific test
+mocha test/path/to/yourTest.spec.js
+```
