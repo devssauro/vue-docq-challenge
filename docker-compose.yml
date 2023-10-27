@@ -1,0 +1,34 @@
+version: "3.6"
+
+volumes:
+  docq-challenge-vue: {}
+
+services:
+
+  backend:
+    container_name: docq-lucas-cunha-challenge-flask
+    build:
+      context: https://github.com/devssauro/flask-docq-challenge.git
+      dockerfile: Dockerfile
+    ports:
+      - "5010:5010"
+    networks:
+      - docqnetwork
+
+  frontend:
+    container_name: docq-lucas-cunha-challenge-vue3
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - docqnetwork
+    volumes:
+      - docq-challenge-vue:/app
+
+networks:
+  docqnetwork:
+    name: docqnetwork

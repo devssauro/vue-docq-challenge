@@ -29,7 +29,7 @@
                       @click="isActive.value = false" />
                     <v-btn
                       text="Upload"
-                      @click="uploadImage()"
+                      @click="uploadImage"
                       :loading="loadingUpload"
                     ></v-btn>
                   </v-card-actions>
@@ -38,7 +38,7 @@
             </v-dialog>
           </v-col>
           <v-col v-for="image in images" :key="image.id" cols="12">
-            <v-card @click="selectImage(image.id)" variant="outlined">
+            <v-card @click="selectImage(image)" variant="outlined">
               <v-img 
                 :alt="image.text"
                 :src="image.src" />
@@ -65,11 +65,11 @@
 
     <v-main fill-heigth>
       <v-container>
-        <v-row v-if="this.selectedImg !== null">
+        <v-row v-if="selectedImg !== null">
           <v-col cols="6">
             <v-card-text>
-              <v-img :max-height="300" v-if="this.selectedImg !== null" :src="getSelectedImageSrc()" />
-              {{ getSelectedImageText() }}
+              <v-img :max-height="300" v-if="selectedImg !== null" :src="selectedImg.src" />
+              {{ selectedImg.text }}
             </v-card-text>
           </v-col>
           <v-col cols="6">
@@ -99,15 +99,22 @@
   export default defineComponent({
     name: "app",
     components: {BarChart},
+    setup() {
+      const selectedImg = ref(null);
+      const images = ref([]);
+
+      return {
+        images,
+        selectedImg
+      }
+    },
     data: () => ({ 
       dialog: false,
       drawer: null,
-      images: [],
       loadingUpload: false,
       newImage: null,
       newImageText: '',
       search: "",
-      selectedImg: null,
       selectedWordCount: 0,
       selectedWordFrequency: {},
       totalWords: null,
@@ -123,52 +130,43 @@
     methods: {
       getImages() {
         axios.get(`http://localhost:5010/all`, {params: {query: this.search}}).then((response) => {
-          this.images = response.data;
+          this.images = JSON.parse(JSON.stringify(response.data));;
         });
       },
       getMostFrequentWords() {
-        axios.get(`http://localhost:5010/${this.selectedImg}/words/occurencies`, {params: {query: this.search}}).then((response) => {
+        axios.get(`http://localhost:5010/${this.selectedImg.id}/words/occurencies`, {params: {query: this.search}}).then((response) => {
           this.wordFreqData = response.data;
         });
       },
       getTotalWords() {
-        axios.get(`http://localhost:5010/${this.selectedImg}/words/total`, {params: {query: this.search}}).then((response) => {
+        axios.get(`http://localhost:5010/${this.selectedImg.id}/words/total`, {params: {query: this.search}}).then((response) => {
           this.totalWords = response.data.total_words;
         });
       },
-      uploadImage() {
+      async uploadImage() {
         this.loadingUpload = true;
-        (async () => {
-          let fd = new FormData();
-          fd.set("img", this.newImage[0]);
-          console.log("starting")
-          const worker = await createWorker('eng');
-          const { data: { text } } = await worker.recognize(this.newImage[0]);
-          fd.set("text_data", text.replace(/\n/g, " "));
-          await worker.terminate();
-          this.loadingUpload = false;
-          axios.post("http://localhost:5010/upload", fd, {
-            headers: {"Content-Type": "multipart/form-data"}
-          }).then((res) => {
-            this.getImages()
-            this.selectImage(res.data.id);
-          });
-          this.dialog = false;
-        })();
+        let fd = new FormData();
+        fd.set("img", this.newImage[0]);
+        console.log("starting")
+        const worker = await createWorker('eng');
+        const { data: { text } } = await worker.recognize(this.newImage[0]);
+        fd.set("text_data", text.replace(/\n/g, " "));
+        await worker.terminate();
+        this.loadingUpload = false;
+        axios.post("http://localhost:5010/upload", fd, {
+          headers: {"Content-Type": "multipart/form-data"}
+        }).then((res) => {
+          this.getImages();
+          this.selectedImg = res.data;
+          this.selectImage(this.selectedImg);
+        });
+        this.dialog = false;
       },
-      selectImage(imageId) {
-        this.selectedImg = imageId;
+      selectImage(image) {
+        this.selectedImg = image;
         this.getMostFrequentWords();
         this.getTotalWords();
       },
-      getSelectedImageSrc() {
-        if (this.selectedImg !== null)
-          return this.images.filter(img => img.id === this.selectedImg)[0].src;
-      },
-      getSelectedImageText() {
-        if (this.selectedImg !== null)
-          return this.images.filter(img => img.id === this.selectedImg)[0].text;
-      }
     },
     created() {
       this.getImages();
