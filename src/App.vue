@@ -76,7 +76,7 @@
             <v-card :title="`Total of words: ${totalWords}`" class="mb-2">
             </v-card>
             <v-card title="Most frequent words" class="px-4 pb-4">
-              <BarChart :chartData="wordFreqData" />
+              <BarChart :chartData="wordFreqData" :options="barOptions" />
             </v-card>
           </v-col>
         </v-row>
@@ -118,6 +118,13 @@
       selectedWordCount: 0,
       selectedWordFrequency: {},
       totalWords: null,
+      barOptions: {
+        plugins: {
+          legend: {
+            display: false,
+          }
+        }
+      },
       wordFreqData: {
         labels: [],
         datasets: [
