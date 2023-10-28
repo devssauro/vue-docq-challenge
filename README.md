@@ -29,3 +29,7 @@ docker compose up backend && yarn dev
 Run an specific test
 mocha test/path/to/yourTest.spec.js
 ```
+
+## Backend
+
+The backend project is located on [this GitHub repo](https://github.com/devssauro/flask-docq-challenge) in case it's necessary to access the code locally
