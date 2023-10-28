@@ -12,6 +12,7 @@
     "axios": "^1.5.1",
     "chart.js": "^4.4.0",
     "mocha": "^10.2.0",
+    "prettier": "^3.0.3",
     "roboto-fontface": "*",
     "selenium-webdriver": "^4.14.0",
     "tesseract.js": "^5.0.2",

@@ -4,7 +4,6 @@ volumes:
   docq-challenge-vue: {}
 
 services:
-
   backend:
     container_name: docq-lucas-cunha-challenge-flask
     build:

@@ -8,7 +8,7 @@ The project corresponds to a coding challenge described on the file sent by emai
 # Install the libraries to run the project
 yarn
 
-# To compile and use the hot-reload to 
+# To compile and use the hot-reload to
 yarn dev
 
 ```
